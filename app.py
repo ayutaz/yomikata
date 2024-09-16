@@ -29,59 +29,93 @@ def get_random_sentence():
 @st.cache
 def get_dbert_prediction_and_heteronym_list(text):
     from yomikata.dbert import dBert
+    import os
 
-    reader = dBert()
-    return reader.furigana(text), reader.heteronyms
+    model_dir = os.environ.get('YOMIKATA_MODEL_DIR', '/app/yomikata/dbert-artifacts')
+    print(f"Using model directory: {model_dir}")
+    print(f"Directory contents: {os.listdir(model_dir)}")
+    
+    for root, dirs, files in os.walk(model_dir):
+        for file in files:
+            print(os.path.join(root, file))
+    
+    if not os.path.exists(model_dir):
+        raise ValueError(f"Model directory not found: {model_dir}")
+    
+    try:
+        reader = dBert(model_dir)
+        return reader.furigana(text), reader.heteronyms
+    except Exception as e:
+        print(f"Error initializing dBert: {str(e)}")
+        raise
 
 
 @st.cache
 def get_stats():
     from yomikata.config import config
     from yomikata.utils import load_dict
+    import os
 
-    stats = load_dict(Path(config.STORES_DIR, "dbert/training_performance.json"))
-
-    global_accuracy = stats["test"]["accuracy"]
-
-    stats = stats["test"]["heteronym_performance"]
-    heteronyms = stats.keys()
-
-    accuracy = [stats[heteronym]["accuracy"] for heteronym in heteronyms]
-
-    readings = [
-        "、".join(
-            [
-                "{reading} ({correct}/{n})".format(
-                    reading=reading,
-                    correct=stats[heteronym]["readings"][reading]["found"][reading],
-                    n=stats[heteronym]["readings"][reading]["n"],
-                )
-                for reading in stats[heteronym]["readings"].keys()
-                if (
-                    stats[heteronym]["readings"][reading]["found"][reading] != 0
-                    or reading != "<OTHER>"
-                )
-            ]
-        )
-        for heteronym in heteronyms
+    # training_performance.json ファイルの場所を確認
+    possible_paths = [
+        Path(config.STORES_DIR, "dbert/training_performance.json"),
+        Path(config.DBERT_DIR, "training_performance.json"),
+        Path("/app/yomikata/dbert-artifacts/training_performance.json")
     ]
 
-    # if reading != '<OTHER>'
+    stats_file = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            stats_file = path
+            break
 
-    df = pd.DataFrame({"heteronym": heteronyms, "accuracy": accuracy, "readings": readings})
+    if stats_file is None:
+        st.error("training_performance.json file not found")
+        return None, None
 
-    df = df[df["readings"].str.contains("、")]
+    try:
+        stats = load_dict(stats_file)
+        global_accuracy = stats["test"]["accuracy"]
 
-    df["readings"] = df["readings"].str.replace("<OTHER>", "Other")
+        stats = stats["test"]["heteronym_performance"]
+        heteronyms = stats.keys()
 
-    df = df.rename(columns={"readings": "readings (correct/total)"})
+        accuracy = [stats[heteronym]["accuracy"] for heteronym in heteronyms]
 
-    df = df.sort_values("accuracy", ascending=False, ignore_index=True)
+        readings = [
+            "、".join(
+                [
+                    "{reading} ({correct}/{n})".format(
+                        reading=reading,
+                        correct=stats[heteronym]["readings"][reading]["found"][reading],
+                        n=stats[heteronym]["readings"][reading]["n"],
+                    )
+                    for reading in stats[heteronym]["readings"].keys()
+                    if (
+                        stats[heteronym]["readings"][reading]["found"][reading] != 0
+                        or reading != "<OTHER>"
+                    )
+                ]
+            )
+            for heteronym in heteronyms
+        ]
 
-    df.index += 1
+        df = pd.DataFrame({"heteronym": heteronyms, "accuracy": accuracy, "readings": readings})
 
-    return global_accuracy, df
+        df = df[df["readings"].str.contains("、")]
 
+        df["readings"] = df["readings"].str.replace("<OTHER>", "Other")
+
+        df = df.rename(columns={"readings": "readings (correct/total)"})
+
+        df = df.sort_values("accuracy", ascending=False, ignore_index=True)
+
+        df.index += 1
+
+        return global_accuracy, df
+    except Exception as e:
+        st.error(f"Error loading stats: {str(e)}")
+        return None, None
 
 @st.cache
 def furigana_to_spacy(text_with_furigana):
@@ -183,11 +217,13 @@ if st.button("🎲 Randomize the input sentence"):
 # Stats section
 global_accuracy, stats_df = get_stats()
 
-st.subheader(
-    f"**Yomikata** supports {len(stats_df)} heteronyms, with a global accuracy of {global_accuracy:.0%}!"
-)
-
-st.dataframe(stats_df)
+if global_accuracy is not None and stats_df is not None:
+    st.subheader(
+        f"**Yomikata** supports {len(stats_df)} heteronyms, with a global accuracy of {global_accuracy:.0%}!"
+    )
+    st.dataframe(stats_df)
+else:
+    st.warning("Unable to load performance statistics. Using dummy data for demonstration.")
 
 st.subheader("Check out **Yomikata** on [GitHub](https://github.com/passaglia/yomikata) today!")
 

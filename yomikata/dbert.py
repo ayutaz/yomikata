@@ -6,6 +6,7 @@ Provides the dBert class that implements Reader using BERT contextual embeddings
 import logging
 import os
 from pathlib import Path
+from transformers import BertJapaneseTokenizer, BertForMaskedLM
 
 import numpy as np
 import torch
@@ -112,17 +113,53 @@ class dBert(Reader):
             self.load(artifacts_dir)
 
     def load(self, directory):
-        self.tokenizer = BertJapaneseTokenizer.from_pretrained(directory)
-        self.model = AutoModelForTokenClassification.from_pretrained(directory).to(self.device)
-        self.label_encoder = LabelEncoder.load(Path(directory, "label_encoder.json"))
-        self.heteronyms = utils.load_dict(Path(directory, "heteronyms.json"))
+        print(f"Loading model from directory: {directory}")
+        print(f"Directory contents: {os.listdir(directory)}")
+        
+        try:
+            self.tokenizer = BertJapaneseTokenizer.from_pretrained(directory)
+            print("Tokenizer loaded successfully")
+        except Exception as e:
+            print(f"Error loading tokenizer: {str(e)}")
+            raise
+        
+        try:
+            self.model = AutoModelForTokenClassification.from_pretrained(directory)
+            print("Model loaded successfully")
+        except Exception as e:
+            print(f"Error loading model: {str(e)}")
+            raise
+        
+        self.model.eval()
+        print("Model set to evaluation mode")
+        
+        # Load label encoder
+        try:
+            self.label_encoder = LabelEncoder.load(Path(directory, "label_encoder.json"))
+            print("Label encoder loaded successfully")
+        except Exception as e:
+            print(f"Error loading label encoder: {str(e)}")
+            raise
+        
+        # Load heteronyms
+        try:
+            self.heteronyms = utils.load_dict(Path(directory, "heteronyms.json"))
+            print("Heteronyms loaded successfully")
+        except Exception as e:
+            print(f"Error loading heteronyms: {str(e)}")
+            raise
+        
+        # Initialize surfaceIDs
+        try:
+            surfaces = list(set([x.split(":")[0] for x in self.label_encoder.classes if x != "<OTHER>"]))
+            self.surfaceIDs = self.tokenizer.encode(surfaces, add_special_tokens=False)
+            print(f"surfaceIDs initialized with {len(self.surfaceIDs)} items")
+        except Exception as e:
+            print(f"Error initializing surfaceIDs: {str(e)}")
+            raise
 
-        self.surfaceIDs = self.tokenizer.encode(
-            list(set([x.split(":")[0] for x in self.label_encoder.classes if x != "<OTHER>"])),
-            add_special_tokens=False,
-        )
-        logger.info(f"Loaded model from directory {directory}")
-
+        print("Load method completed successfully")
+        
     def save(self, directory):
         self.tokenizer.save_pretrained(directory)
         self.model.save_pretrained(directory)

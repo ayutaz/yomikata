@@ -14,6 +14,17 @@ You can also read about the motivations and theory behind yomikata on my [blog](
 
 # Usage
 
+## Docker Ver
+
+```sh
+docker build -t yomikata-app .
+docker run -p 8501:8501 yomikata-app
+```
+
+access `http://localhost:8501`
+
+## original ver
+
 ```python
 from yomikata.dbert import dBert
 reader = dBert()
