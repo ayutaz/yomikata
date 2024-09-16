@@ -106,11 +106,14 @@ class dBert(Reader):
                 default_model, num_labels=len(self.label_encoder.classes)
             )
             self.model.resize_token_embeddings(len(self.tokenizer))
+            self.model.to(self.device)  # モデルをデバイスに移動
             logger.info(f"Using model {default_model}")
 
             self.save(artifacts_dir)
         else:
             self.load(artifacts_dir)
+
+        self.model.to(self.device)  # モデルを確実にデバイスに移動
 
     def load(self, directory):
         print(f"Loading model from directory: {directory}")
@@ -125,7 +128,8 @@ class dBert(Reader):
         
         try:
             self.model = AutoModelForTokenClassification.from_pretrained(directory)
-            print("Model loaded successfully")
+            self.model.to(self.device)  # モデルをデバイスに移動
+            print("Model loaded successfully and moved to device")
         except Exception as e:
             print(f"Error loading model: {str(e)}")
             raise
@@ -284,8 +288,11 @@ class dBert(Reader):
         # Output some training information
         print(f"Time: {result.metrics['train_runtime']:.2f}")
         print(f"Samples/second: {result.metrics['train_samples_per_second']:.2f}")
-        gpu_index = int(os.environ["CUDA_VISIBLE_DEVICES"])
-        utils.print_gpu_utilization(gpu_index)
+        if torch.cuda.is_available():
+            gpu_index = torch.cuda.current_device()
+            utils.print_gpu_utilization(gpu_index)
+        else:
+            print("GPU not available, running on CPU")
 
         # Get metrics for each train/val/split
         self.model.eval()
@@ -419,19 +426,20 @@ class dBert(Reader):
         input_ids = text_encoded["input_ids"].to(self.device)
         input_mask = text_encoded["attention_mask"].to(self.device)
 
-        logits = self.model(input_ids=input_ids, attention_mask=input_mask).logits
+        with torch.no_grad():
+            logits = self.model(input_ids=input_ids, attention_mask=input_mask).logits
 
         predictions = torch.argmax(logits, dim=2)
 
         output_ruby = []
         for i, p in enumerate(predictions[0]):
-            text = self.tokenizer.decode([input_ids[0][i]])
+            text = self.tokenizer.decode([input_ids[0][i].cpu()])  # CPUに移動してからデコード
             if text in ["[CLS]", "[SEP]"]:
                 continue
             if text[:2] == "##":
                 text = text[2:]
-            if input_ids[0][i].item() in self.surfaceIDs:
-                furi = self.label_encoder.index_to_class[p.item()]
+            if input_ids[0][i].cpu().item() in self.surfaceIDs:  # CPUに移動してから比較
+                furi = self.label_encoder.index_to_class[p.cpu().item()]  # CPUに移動
 
                 if furi == "<OTHER>":
                     output_ruby.append(f"{{{text}}}")

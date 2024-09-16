@@ -1,15 +1,25 @@
-# Python 3.10のベースイメージを使用
-FROM python:3.10-slim-buster
+# CUDA 12.1 ベースイメージを使用
+FROM nvidia/cuda:12.1.0-base-ubuntu22.04
 
-# 作業ディレクトリを設定
-WORKDIR /app
+# 環境変数を設定
+ENV PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    TZ=UTC
 
 # 必要なシステムパッケージをインストール
 RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
     build-essential \
     git \
     wget \
     && rm -rf /var/lib/apt/lists/*
+
+# Python3 をデフォルトの python にする
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
+# 作業ディレクトリを設定
+WORKDIR /app
 
 # requirements.txtファイルをコピー
 COPY requirements/requirements-inference.txt .
@@ -17,24 +27,23 @@ COPY requirements/requirements-inference.txt .
 # 必要なディレクトリを作成
 RUN mkdir -p /app/stores/dbert
 
-# NumPy, PyTorch, および他の依存関係をインストール
-RUN pip install --no-cache-dir \
+# PyTorch と CUDA 12.1 互換のバージョンをインストール
+RUN pip3 install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# NumPy, および他の依存関係をインストール
+RUN pip3 install --no-cache-dir \
     numpy==1.24.3 \
-    torch==1.13.1+cpu \
-    torchvision==0.14.1+cpu \
-    torchaudio==0.13.1 \
     plac \
     streamlit \
     spacy \
     pandas \
-    altair==4.2.2 \
-    --extra-index-url https://download.pytorch.org/whl/cpu
+    altair==4.2.2
 
-# 他の依存関係をインストール（torch関連とnumpyを除く）
-RUN pip install --no-cache-dir -r requirements-inference.txt
+# 他の依存関係をインストール
+RUN pip3 install --no-cache-dir -r requirements-inference.txt
 
 # Yomikataをインストール
-RUN pip install yomikata
+RUN pip3 install yomikata
 
 # モデルアーティファクトを直接ダウンロードして展開
 RUN mkdir -p /app/yomikata && \
