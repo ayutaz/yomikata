@@ -18,6 +18,7 @@ yomikata/*.tar.gz
 
 # Packaging
 venv
+.venv
 dist
 *.egg-info
 __pycache__
