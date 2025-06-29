@@ -12,7 +12,7 @@ from yomikata.dictionary import Dictionary
 from yomikata.utils import parse_furigana
 
 
-@st.cache
+@st.cache_data
 def add_border(html: str):
     WRAPPER = """<div style="overflow-x: auto; border: 1px solid #e6e9ef; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.0rem; display: inline-block">{}</div>"""
     html = html.replace("\n", " ")
@@ -26,8 +26,8 @@ def get_random_sentence():
     return df.sample(1).iloc[0].sentence
 
 
-@st.cache
-def get_dbert_prediction_and_heteronym_list(text):
+@st.cache_resource
+def load_dbert_model():
     from yomikata.dbert import dBert
     import os
 
@@ -44,13 +44,18 @@ def get_dbert_prediction_and_heteronym_list(text):
     
     try:
         reader = dBert(model_dir)
-        return reader.furigana(text), reader.heteronyms
+        return reader
     except Exception as e:
         print(f"Error initializing dBert: {str(e)}")
         raise
 
+@st.cache_data
+def get_dbert_prediction_and_heteronym_list(text):
+    reader = load_dbert_model()
+    return reader.furigana(text), reader.heteronyms
 
-@st.cache
+
+@st.cache_data
 def get_stats():
     from yomikata.config import config
     from yomikata.utils import load_dict
@@ -117,7 +122,7 @@ def get_stats():
         st.error(f"Error loading stats: {str(e)}")
         return None, None
 
-@st.cache
+@st.cache_data
 def furigana_to_spacy(text_with_furigana):
     tokens = parse_furigana(text_with_furigana)
     ents = []
@@ -212,7 +217,7 @@ if len(spacy_dict["ents"]) > 0:
 # Randomize button
 if st.button("🎲 Randomize the input sentence"):
     st.session_state.default_sentence = get_random_sentence()
-    st.experimental_rerun()
+    st.rerun()
 
 # Stats section
 global_accuracy, stats_df = get_stats()
