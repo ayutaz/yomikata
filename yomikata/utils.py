@@ -1,6 +1,7 @@
-""" utils.py
+"""utils.py
 A collection of utility functions used throughout the project.
 """
+
 import json
 import random
 import re
@@ -150,7 +151,7 @@ class LabelEncoder(object):
         with open(fp, "r") as fp:
             contents = json.load(fp=fp)
         encoder = cls()
-        
+
         # Handle both old and new format
         if "class_to_index" in contents:
             encoder.class_to_index = contents["class_to_index"]
@@ -158,7 +159,7 @@ class LabelEncoder(object):
         elif "labels" in contents:
             # Recreate from labels list
             encoder.fit(contents["labels"])
-        
+
         return encoder
 
 

@@ -45,7 +45,14 @@ def read_bccwj_file(filename: str):
     df["前文脈"] = df["前文脈"].fillna("")
     df["後文脈"] = df["後文脈"].fillna("")
     df["full_text"] = (
-        df["前文脈"] + df["キー"] + "[" + df["語彙素読み"] + ":" + df["発音形出現形"] + "]" + df["後文脈"]
+        df["前文脈"]
+        + df["キー"]
+        + "["
+        + df["語彙素読み"]
+        + ":"
+        + df["発音形出現形"]
+        + "]"
+        + df["後文脈"]
     )
 
     def get_sentences(row):

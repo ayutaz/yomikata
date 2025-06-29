@@ -38,8 +38,8 @@ class Dictionary(Reader):
             self.tagger = fugashi.Tagger()
             self.token_to_surface = lambda word: word.surface
             self.token_to_pos = lambda word: word.feature.pos1
-            self.token_to_kana = (
-                lambda word: jaconv.kata2hira(str(word))
+            self.token_to_kana = lambda word: (
+                jaconv.kata2hira(str(word))
                 if (word.feature.kana == "*" or word.feature.kana is None)
                 else jaconv.kata2hira(str(word.feature.kana))
             )
@@ -50,8 +50,8 @@ class Dictionary(Reader):
             self.tagger = fugashi.GenericTagger(ipadic.MECAB_ARGS)
             self.token_to_surface = lambda word: word.surface
             self.token_to_pos = lambda word: word.feature[0]
-            self.token_to_kana = (
-                lambda word: jaconv.kata2hira(str(word.feature[7]))
+            self.token_to_kana = lambda word: (
+                jaconv.kata2hira(str(word.feature[7]))
                 if len(word.feature) >= 8
                 else jaconv.kata2hira(str(word.surface))
             )
@@ -62,10 +62,8 @@ class Dictionary(Reader):
             self.tagger = fugashi.GenericTagger(jumandic.MECAB_ARGS)
             self.token_to_surface = lambda word: word.surface
             self.token_to_pos = lambda word: word.feature[0]
-            self.token_to_kana = (
-                lambda word: word.feature[5]
-                if word.feature[5] != "*"
-                else jaconv.kata2hira(str(word))
+            self.token_to_kana = lambda word: (
+                word.feature[5] if word.feature[5] != "*" else jaconv.kata2hira(str(word))
             )
         elif tagger == "sudachi":
             from sudachipy import dictionary as sudachidict
@@ -113,7 +111,7 @@ class Dictionary(Reader):
         Returns:
             RubyToken: RubyToken object with furigana
 
-        This code is modified from the version in the part of speach library: 
+        This code is modified from the version in the part of speach library:
         https://github.com/neocl/speach/
         https://github.com/neocl/speach/blob/main/speach/ttlig.py
         :copyright: (c) 2018 Le Tuan Anh <tuananh.ke@gmail.com>

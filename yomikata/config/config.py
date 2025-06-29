@@ -45,7 +45,7 @@ STORES_DIR.mkdir(parents=True, exist_ok=True)
 RUN_REGISTRY.mkdir(parents=True, exist_ok=True)
 
 # Special tokens reserved
-ASCII_SPACE_TOKEN = "\U0000FFFF"  # this is used to replace the usual space characters before sending text to mecab, because mecab uses the usual space to separate words.
+ASCII_SPACE_TOKEN = "\U0000ffff"  # this is used to replace the usual space characters before sending text to mecab, because mecab uses the usual space to separate words.
 
 # Seed # Currently seeds not actually set anywhere
 SEED = 1271297

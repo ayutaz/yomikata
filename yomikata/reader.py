@@ -1,6 +1,7 @@
-""" reader.py
+"""reader.py
 An abstract class for assigning readings to Japanese sentences.
 """
+
 import abc
 
 
