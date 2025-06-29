@@ -55,8 +55,6 @@ RUN pip3 install --no-cache-dir --pre -r requirements/requirements-inference.txt
 
 # アプリケーションファイルをコピー
 COPY app.py ./
-COPY scripts/ ./scripts/
-COPY config/ ./config/
 
 # モデルアーティファクトを直接ダウンロードして展開
 RUN mkdir -p /app/yomikata && \
