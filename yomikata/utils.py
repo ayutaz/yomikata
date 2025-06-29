@@ -148,8 +148,18 @@ class LabelEncoder(object):
     @classmethod
     def load(cls, fp):
         with open(fp, "r") as fp:
-            kwargs = json.load(fp=fp)
-        return cls(**kwargs)
+            contents = json.load(fp=fp)
+        encoder = cls()
+        
+        # Handle both old and new format
+        if "class_to_index" in contents:
+            encoder.class_to_index = contents["class_to_index"]
+            encoder.index_to_class = {v: k for k, v in encoder.class_to_index.items()}
+        elif "labels" in contents:
+            # Recreate from labels list
+            encoder.fit(contents["labels"])
+        
+        return encoder
 
 
 def get_max_token_size(dataset, tokenizer, input_feature, output_feature):
