@@ -25,8 +25,10 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 # 作業ディレクトリを設定
 WORKDIR /app
 
-# requirements.txtファイルをコピー
-COPY requirements/requirements-inference.txt .
+# パッケージのメタデータとrequirementsをコピー
+COPY pyproject.toml ./
+COPY README.md ./
+COPY requirements/ ./requirements/
 
 # 必要なディレクトリを作成
 RUN mkdir -p /app/stores/dbert
@@ -43,14 +45,18 @@ RUN pip3 install --no-cache-dir \
     pandas \
     altair==4.2.2
 
-# 他の依存関係をインストール（プレリリースパッケージを許可）
-RUN pip3 install --no-cache-dir --pre -r requirements-inference.txt
+# yomikataパッケージのソースコードをコピー
+COPY yomikata/ ./yomikata/
+COPY MANIFEST.in ./
 
-# アプリケーションのソースコードをコピー
-COPY . .
+# 依存関係とパッケージをインストール
+RUN pip3 install --no-cache-dir --pre -r requirements/requirements-inference.txt && \
+    pip3 install --no-cache-dir .
 
-# ローカルのyomikataパッケージをインストール
-RUN pip3 install --no-cache-dir -e .
+# アプリケーションファイルをコピー
+COPY app.py ./
+COPY scripts/ ./scripts/
+COPY config/ ./config/
 
 # モデルアーティファクトを直接ダウンロードして展開
 RUN mkdir -p /app/yomikata && \
