@@ -11,8 +11,12 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     build-essential \
+    cmake \
     git \
     wget \
+    mecab \
+    libmecab-dev \
+    mecab-ipadic-utf8 \
     && rm -rf /var/lib/apt/lists/*
 
 # Python3 をデフォルトの python にする
@@ -39,11 +43,14 @@ RUN pip3 install --no-cache-dir \
     pandas \
     altair==4.2.2
 
-# 他の依存関係をインストール
-RUN pip3 install --no-cache-dir -r requirements-inference.txt
+# 他の依存関係をインストール（プレリリースパッケージを許可）
+RUN pip3 install --no-cache-dir --pre -r requirements-inference.txt
 
-# Yomikataをインストール
-RUN pip3 install yomikata
+# アプリケーションのソースコードをコピー
+COPY . .
+
+# ローカルのyomikataパッケージをインストール
+RUN pip3 install --no-cache-dir -e .
 
 # モデルアーティファクトを直接ダウンロードして展開
 RUN mkdir -p /app/yomikata && \
@@ -54,9 +61,6 @@ RUN mkdir -p /app/yomikata && \
 
 # 環境変数の設定
 ENV YOMIKATA_MODEL_DIR=/app/yomikata/dbert-artifacts
-
-# アプリケーションのソースコードをコピー
-COPY . .
 
 # ポート8501を開放（Streamlitのデフォルトポート）
 EXPOSE 8501
