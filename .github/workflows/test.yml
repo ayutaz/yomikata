@@ -1,6 +1,9 @@
 name: Test
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
@@ -8,14 +11,17 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
     
     steps:
       - uses: actions/checkout@v4
       
-      - name: Set up Python 3.11
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python-version }}
       
       - name: Install system dependencies
         run: |
@@ -25,9 +31,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Try to install without editable mode
-          pip install .
-          pip install pytest
+          pip install --pre .
+          pip install pytest pytest-cov pytest-mock
       
       - name: Check imports
         run: |
@@ -35,6 +40,15 @@ jobs:
           python -c "from yomikata import utils; print('utils imported')" || echo "Failed to import utils"
           pip list
       
-      - name: Run basic test
+      - name: Run tests with coverage
         run: |
-          python -m pytest tests/test_basic.py -v -s || echo "Test failed with exit code $?"
+          python -m pytest tests/ -v --cov=yomikata --cov-report=xml --cov-report=term
+      
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false

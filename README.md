@@ -1,5 +1,10 @@
 # yomikata
 
+[![Test](https://github.com/ayutaz/yomikata/actions/workflows/test.yml/badge.svg)](https://github.com/ayutaz/yomikata/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/ayutaz/yomikata/branch/main/graph/badge.svg)](https://codecov.io/gh/ayutaz/yomikata)
+[![Docker](https://github.com/ayutaz/yomikata/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/ayutaz/yomikata/actions/workflows/docker-publish.yml)
+[![PyPI version](https://badge.fury.io/py/yomikata-plus.svg)](https://badge.fury.io/py/yomikata-plus)
+
 <img src="https://raw.githubusercontent.com/passaglia/yomikata/main/robot_reading.png" width=125 height=125 alt="A robot reading a book" />
 
 **Yomikata** uses context to resolve ambiguous words in Japanese. Check out the [**interactive demo**](https://huggingface.co/spaces/passaglia/yomikata-demo)!
