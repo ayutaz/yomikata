@@ -3,12 +3,12 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "yomikata"
+name = "yomikata-plus"
 version = "0.0.4"
 authors = [{name="Sam Passaglia"}]
 description = "Japanese kanji disambiguation"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",

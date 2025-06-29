@@ -2,6 +2,6 @@ black
 flake8
 Flake8-pyproject
 isort
-mlflow-skinny==2.1.1
+mlflow-skinny>=2.8.0
 pretty-errors==1.2.25
 build
