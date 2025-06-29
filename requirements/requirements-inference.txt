@@ -5,5 +5,5 @@ speach==0.1a15.post1
 transformers>=4.25.1
 datasets>=2.14.0
 pynvml==11.4.1
-sentencepiece==0.1.97
+sentencepiece>=0.1.99
 rich>=12.6.0
