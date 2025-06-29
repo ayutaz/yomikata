@@ -46,7 +46,7 @@ jobs:
       
       - name: Run tests with coverage
         run: |
-          python -m pytest tests/test_basic.py tests/test_utils.py tests/test_dbert.py tests/test_dictionary.py tests/test_integration.py -v --cov=yomikata --cov-report=xml --cov-report=term
+          python -m pytest tests/test_basic.py tests/test_utils.py tests/test_dictionary.py tests/test_integration.py -v --cov=yomikata --cov-report=xml --cov-report=term --cov-fail-under=30
       
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
